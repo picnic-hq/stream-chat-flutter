@@ -62,11 +62,53 @@ class ChannelPreview extends StatelessWidget {
   /// Widget rendering the sending indicator,
   /// by default it uses the [SendingIndicator] widget
   final Widget? sendingIndicator;
+    
+    Widget circleChat(Channel channel) {
+    return Container(
+      width: 42,
+      height: 42,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [
+          Color(0XFFFFE380),
+          Color(0XFFFF9D92),
+          Color(0XFFED7DFF),
+          Color(0XFFC575FF),
+          Color(0XFF80ABFF),
+          Color(0XFFA8FAFF),
+        ]),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(2.5),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Text(
+            channel.image ?? '😊',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 30,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final channelPreviewTheme = ChannelPreviewTheme.of(context);
     final streamChatState = StreamChat.of(context);
+     
+    bool isCircleChat = false;
+    if (channel.type == 'livestream' && channel.id!.startsWith('circle_')) {
+      isCircleChat = true;
+    }
+      
     return BetterStreamBuilder<bool>(
       stream: channel.isMutedStream,
       initialData: channel.isMuted,
@@ -80,7 +122,10 @@ class ChannelPreview extends StatelessWidget {
           ),
           onTap: () => onTap?.call(channel),
           onLongPress: () => onLongPress?.call(channel),
-          leading: leading ?? ChannelAvatar(onTap: onImageTap),
+          leading: //leading ?? ChannelAvatar(onTap: onImageTap),
+            Padding(
+        padding: EdgeInsets.only(top: 2),
+        child: isCircleChat ? circleChat(channel) : ChannelAvatar(onTap: onImageTap)),
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
