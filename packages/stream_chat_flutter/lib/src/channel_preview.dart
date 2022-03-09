@@ -91,7 +91,7 @@ class ChannelPreview extends StatelessWidget {
             channel.image ?? '😊',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 25,
             ),
           ),
         ),
