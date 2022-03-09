@@ -36,6 +36,8 @@ class UserMentionTile extends StatelessWidget {
     return SizedBox(
       height: 56,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(
             width: 16,
@@ -46,6 +48,15 @@ class UserMentionTile extends StatelessWidget {
                 constraints: BoxConstraints.tight(const Size(40, 40)),
               ),
           const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+                        user.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: chatThemeData.textTheme.bodyBold,
+                      ),
+          ),
+          /*
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
@@ -74,6 +85,7 @@ class UserMentionTile extends StatelessWidget {
               ),
             ),
           ),
+          */
           trailing ??
               Padding(
                 padding: const EdgeInsets.only(
