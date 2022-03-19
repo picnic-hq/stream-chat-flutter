@@ -115,8 +115,7 @@ class _UserMentionsOverlayState extends State<UserMentionsOverlay> {
                   color: theme.colorTheme.barsBg,
                   child: InkWell(
                     onTap: () => widget.onMentionUserTap?.call(user),
-                    child: widget.mentionsTileBuilder?.call(context, user) ??
-                        UserMentionTile(user),
+                    child: widget.mentionsTileBuilder?.call(context, user) ?? UserMentionTile(user),
                   ),
                 );
               },
@@ -127,46 +126,15 @@ class _UserMentionsOverlayState extends State<UserMentionsOverlay> {
     );
   }
 
-  List<User> get membersAndWatchers {
-    final state = widget.channel.state!;
-    return {
-      ...state.watchers,
-      ...state.members.map((it) => it.user),
-    }.whereType<User>().toList(growable: false);
-  }
-
   Future<List<User>> queryMentions(String query) async {
-    if (widget.mentionAllAppUsers) {
-      return _queryUsers(query);
-    }
-
-    var channelState = widget.channel.state;
-
-    channelState = channelState!;
-    final members = channelState.members;
-
-    // By default, we return maximum 100 members via queryChannels api call.
-    // Thus it is safe to assume, that if number of members in channel.state
-    // is < 100, then all the members are already available on client side
-    // and we don't need to make any api call to queryMembers endpoint.
-    if (members.length < 100) {
-      final matchingUsers = membersAndWatchers.search(query);
-      return matchingUsers.toList(growable: false);
-    }
-
     final result = await _queryMembers(query);
-    return result
-        .map((it) => it.user)
-        .whereType<User>()
-        .toList(growable: false);
+    return result.map((it) => it.user).whereType<User>().toList(growable: false);
   }
 
   Future<List<Member>> _queryMembers(String query) async {
     final response = await widget.channel.queryMembers(
       pagination: PaginationParams(limit: widget.limit),
-      filter: query.isEmpty
-          ? const Filter.empty()
-          : Filter.autoComplete('name', query),
+      filter: query.isEmpty ? const Filter.empty() : Filter.autoComplete('name', query),
     );
     return response.members;
   }
@@ -190,21 +158,21 @@ class _UserMentionsOverlayState extends State<UserMentionsOverlay> {
   }
 }
 
-
 /// Overlay for displaying users that can be mentioned.
 class CircleMentionsOverlay extends StatefulWidget {
   /// Constructor for creating a [UserMentionsOverlay].
-  CircleMentionsOverlay({
-    Key? key,
-    required this.query,
-    required this.channel,
-    required this.size,
-    this.client,
-    this.limit = 10,
-    this.mentionAllAppUsers = false,
-    this.mentionsTileBuilder,
-    this.onMentionUserTap,
-  })  : assert(
+  CircleMentionsOverlay(
+      {Key? key,
+      required this.query,
+      required this.channel,
+      required this.size,
+      this.client,
+      this.limit = 10,
+      this.mentionAllAppUsers = false,
+      this.mentionsTileBuilder,
+      this.onMentionUserTap,
+      required this.queryCircles})
+      : assert(
           channel.state != null,
           'Channel ${channel.cid} is not yet initialized',
         ),
@@ -240,6 +208,8 @@ class CircleMentionsOverlay extends StatefulWidget {
   /// Callback called when a user is selected.
   final void Function(Channel channel)? onMentionUserTap;
 
+  final Future<List<Channel>> Function(String query)? queryCircles;
+
   @override
   _CircleMentionsOverlayState createState() => _CircleMentionsOverlayState();
 }
@@ -254,7 +224,7 @@ class _CircleMentionsOverlayState extends State<CircleMentionsOverlay> {
   }
 
   @override
-  void didUpdateWidget(covariant UserMentionsOverlay oldWidget) {
+  void didUpdateWidget(covariant CircleMentionsOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.channel != oldWidget.channel ||
         widget.query != oldWidget.query ||
@@ -294,8 +264,7 @@ class _CircleMentionsOverlayState extends State<CircleMentionsOverlay> {
                   color: theme.colorTheme.barsBg,
                   child: InkWell(
                     onTap: () => widget.onMentionUserTap?.call(channel),
-                    child: widget.mentionsTileBuilder?.call(context, channel) ??
-                        CircleMentionTile(channel),
+                    child: CircleMentionTile(channel),
                   ),
                 );
               },
@@ -307,35 +276,20 @@ class _CircleMentionsOverlayState extends State<CircleMentionsOverlay> {
   }
 
   Future<List<Channel>> queryMentions(String query) async {
-    return _queryCircles(query);
-  }
-
-  Future<List<Channel>> _queryCircles(String query) async {
-    assert(
-      widget.client != null,
-      'StreamChatClient is required in order to query all app users',
-    );
-    final response = await widget.client!.queryChannelsOnline(
-      watch: false,
-      state: false,
-      presence: false,
-      paginationParams: PaginationParams(limit: widget.limit),
-      filter: query.isEmpty
-          ? const Filter.empty()
-          : Filter.autoComplete('name', query),
-      sort: [const SortOption('name', direction: SortOption.ASC)],
-    );
-    return response;
+    if (widget.queryCircles == null) {
+      return [];
+    }
+    final channels = await widget.queryCircles!(query);
+    return channels;
   }
 }
-
 
 /// This widget is used for showing user tiles for mentions
 /// Use [title], [subtitle], [leading], [trailing] for
 /// substituting widgets in respective positions
 class CircleMentionTile extends StatelessWidget {
   /// Constructor for creating a [UserMentionTile] widget
-  const UserMentionTile(
+  const CircleMentionTile(
     this.channel, {
     Key? key,
     this.title,
@@ -362,13 +316,8 @@ class CircleMentionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chatThemeData = StreamChatTheme.of(context);
-    return SizedBox(
-      height: 56,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
+    return ListTile(
+      leading: Container(
           height: 42,
           width: 42,
           alignment: Alignment.center,
@@ -389,27 +338,52 @@ class CircleMentionTile extends StatelessWidget {
               fontSize: 26,
             ),
           )),
+      title: Text(
+        channel.name!.replaceAll('circle chat', ''),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: chatThemeData.textTheme.bodyBold,
+      ),
+    );
+/*
+    return SizedBox(
+      height: 56,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+              height: 42,
+              width: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  const Color(0XFFFFE380).withOpacity(0.3),
+                  const Color(0XFFFF9D92).withOpacity(0.3),
+                  const Color(0XFFED7DFF).withOpacity(0.3),
+                  const Color(0XFFC575FF).withOpacity(0.3),
+                  const Color(0XFF80ABFF).withOpacity(0.3),
+                  const Color(0XFFA8FAFF).withOpacity(0.3),
+                ]),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: Text(
+                channel.image ?? '😊',
+                style: const TextStyle(
+                  fontSize: 26,
+                ),
+              )),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-                        channel.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: chatThemeData.textTheme.bodyBold,
-                      ),
+              channel.name!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: chatThemeData.textTheme.bodyBold,
+            ),
           ),
-          trailing ??
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 18,
-                  left: 8,
-                ),
-                child: StreamSvgIcon.mentions(
-                  color: chatThemeData.colorTheme.accentPrimary,
-                ),
-              ),
         ],
       ),
-    );
+    );*/
   }
 }
