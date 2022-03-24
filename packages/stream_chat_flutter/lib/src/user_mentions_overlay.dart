@@ -125,11 +125,39 @@ class _UserMentionsOverlayState extends State<UserMentionsOverlay> {
       ),
     );
   }
+  
+   List<User> get membersAndWatchers {
+    final state = widget.channel.state!;
+    return {
+      ...state.watchers,
+      ...state.members.map((it) => it.user),
+    }.whereType<User>().toList(growable: false);
+  }
 
   Future<List<User>> queryMentions(String query) async {
+    if (widget.mentionAllAppUsers) {
+      return _queryUsers(query);
+    }
+
+    var channelState = widget.channel.state;
+
+    channelState = channelState!;
+    final members = channelState.members;
+
+    // By default, we return maximum 100 members via queryChannels api call.
+    // Thus it is safe to assume, that if number of members in channel.state
+    // is < 100, then all the members are already available on client side
+    // and we don't need to make any api call to queryMembers endpoint.
+    if (members.length < 100) {
+      final matchingUsers = membersAndWatchers.search(query);
+      return matchingUsers.toList(growable: false);
+    }
+
     final result = await _queryMembers(query);
     return result.map((it) => it.user).whereType<User>().toList(growable: false);
   }
+  
+
 
   Future<List<Member>> _queryMembers(String query) async {
     final response = await widget.channel.queryMembers(
