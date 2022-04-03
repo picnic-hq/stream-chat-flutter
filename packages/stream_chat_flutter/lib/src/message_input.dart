@@ -1791,7 +1791,9 @@ class MessageInputState extends State<MessageInput> {
     Message message;
 
     final extra = <String, Object?>{};
-    extra['mentionedChannels'] = _mentionedChannels.where((u) => text.contains('+${u.name}')).toList();
+    final tmpMentionnedChannel =
+        _mentionedChannels.where((u) => text.contains('+${u.name}')).map((e) => [e.id, e.name, e.image]).toList();
+    extra['mentionedChannels'] = jsonEncode(tmpMentionnedChannel);
 
     if (widget.editMessage != null) {
       message = widget.editMessage!.copyWith(
