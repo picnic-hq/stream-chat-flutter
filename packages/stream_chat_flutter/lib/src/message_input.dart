@@ -1173,7 +1173,7 @@ class MessageInputState extends State<MessageInput> {
       mentionsTileBuilder: null,
       onMentionUserTap: (channel) {
         _mentionedChannels.add(channel);
-        splits[splits.length - 1] = channel.name!;
+        splits[splits.length - 1] = channel.name!.replaceAll(' ', '_');
         final rejoin = splits.join('+');
 
         textEditingController.value = TextEditingValue(
@@ -1792,8 +1792,10 @@ class MessageInputState extends State<MessageInput> {
     Message message;
 
     final extra = <String, Object?>{};
-    final tmpMentionnedChannel =
-        _mentionedChannels.where((u) => text.contains('+${u.name}')).map((e) => [e.id, e.name, e.image]).toList();
+    final tmpMentionnedChannel = _mentionedChannels
+        .where((u) => text.contains('+${u.name?.replaceAll(' ', '_')}'))
+        .map((e) => [e.id, e.name, e.image])
+        .toList();
     extra['mentionedChannels'] = jsonEncode(tmpMentionnedChannel);
 
     if (widget.editMessage != null) {
@@ -2004,8 +2006,7 @@ class _PickerWidgetState extends State<_PickerWidget> {
           return const Offstage();
         }
 
-        if ([PermissionState.authorized, PermissionState.limited]
-            .contains(snapshot.data)) {
+        if ([PermissionState.authorized, PermissionState.limited].contains(snapshot.data)) {
           if (widget.containsFile) {
             return GestureDetector(
               onTap: () {
