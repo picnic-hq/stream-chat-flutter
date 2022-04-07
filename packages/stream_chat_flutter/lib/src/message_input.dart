@@ -201,7 +201,8 @@ class MessageInput extends StatefulWidget {
       this.customOverlays = const [],
       this.mentionAllAppUsers = false,
       this.shouldKeepFocusAfterMessage,
-      this.queryCircles})
+      this.queryCircles,
+      this.queryUsers})
       : assert(
           initialMessage == null || editMessage == null,
           "Can't provide both `initialMessage` and `editMessage`",
@@ -325,6 +326,7 @@ class MessageInput extends StatefulWidget {
   final bool? shouldKeepFocusAfterMessage;
 
   final Future<List<Channel>> Function(String query)? queryCircles;
+  final Future<List<User>> Function(String query)? queryUsers;
 
   @override
   MessageInputState createState() => MessageInputState();
@@ -1218,6 +1220,7 @@ class MessageInputState extends State<MessageInput> {
 
     return LayoutBuilder(
       builder: (context, snapshot) => UserMentionsOverlay(
+        queryUsers: widget.queryUsers,
         query: query,
         mentionAllAppUsers: widget.mentionAllAppUsers,
         client: StreamChat.of(context).client,
