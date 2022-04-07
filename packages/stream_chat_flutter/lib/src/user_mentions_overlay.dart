@@ -135,6 +135,9 @@ class _UserMentionsOverlayState extends State<UserMentionsOverlay> {
   }
 
   Future<List<User>> queryMentions(String query) async {
+     if (widget.queryUsers != null) {
+      return widget.queryUsers!(query);
+    }
     if (widget.mentionAllAppUsers) {
       return _queryUsers(query);
     }
