@@ -25,6 +25,7 @@ class UserMentionsOverlay extends StatefulWidget {
     this.mentionAllAppUsers = false,
     this.mentionsTileBuilder,
     this.onMentionUserTap,
+    this.queryUsers
   })  : assert(
           channel.state != null,
           'Channel ${channel.cid} is not yet initialized',
@@ -60,6 +61,8 @@ class UserMentionsOverlay extends StatefulWidget {
 
   /// Callback called when a user is selected.
   final void Function(User user)? onMentionUserTap;
+  
+  final Future<List<User>> Function(String query)? queryUsers;
 
   @override
   _UserMentionsOverlayState createState() => _UserMentionsOverlayState();
