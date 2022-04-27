@@ -29,13 +29,11 @@ class UnreadIndicator extends StatelessWidget {
           }
           return Material(
             borderRadius: BorderRadius.circular(8),
-            color: StreamChatTheme.of(context)
-                .channelPreviewTheme
-                .unreadCounterColor,
+            color: const Color(0XFF838383),
             child: Padding(
               padding: const EdgeInsets.only(
-                left: 5,
-                right: 5,
+                left: 7,
+                right: 7,
                 top: 2,
                 bottom: 1,
               ),
@@ -43,8 +41,9 @@ class UnreadIndicator extends StatelessWidget {
                 child: Text(
                   '${data > 99 ? '99+' : data}',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Colors.white,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
